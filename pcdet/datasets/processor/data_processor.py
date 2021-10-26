@@ -145,3 +145,30 @@ class DataProcessor(object):
             data_dict = cur_processor(data_dict=data_dict)
 
         return data_dict
+
+    def pad_img(self, data_dict=None, config=None):
+        """Pad images according to ``self.size``."""
+        if data_dict is None:
+            return partial(self.pad_img, config=config)
+
+        # Pad with nan, to be replaced later in the pipeline.
+        pad_value = np.nan
+        divisor = config.SIZE_DIVISOR
+
+        if data_dict.get('images', None) is not None:
+            img = data_dict['images']
+            origin_h, origin_w, _ = img.shape
+
+            max_h = int(np.ceil(img.shape[0] / divisor)) * divisor
+            max_w = int(np.ceil(img.shape[1] / divisor)) * divisor
+
+            pad_h = common_utils.get_pad_params(desired_size=max_h, cur_size=origin_h)
+            pad_w = common_utils.get_pad_params(desired_size=max_w, cur_size=origin_w)
+            pad_width = (pad_h, pad_w, (0, 0))
+            image_pad = np.pad(img,
+                               pad_width=pad_width,
+                               mode='constant',
+                               constant_values=pad_value)
+            data_dict['images'] = image_pad
+
+        return data_dict

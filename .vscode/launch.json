@@ -11,7 +11,8 @@
             "program": "${workspaceFolder}/tools/train.py",
             "cwd": "${workspaceFolder}/tools",
             "console": "integratedTerminal",
-            "args": ["--cfg_file", "./cfgs/kitti_models/pv_rcnn.yaml"],
+            "args": ["--cfg_file", "./cfgs/kitti_models/pv_rcnn.yaml",
+            "--batch_size", "2"],
             "justMyCode": false,
             "env": {
                 "CUDA_VISIBLE_DEVICES": "2",

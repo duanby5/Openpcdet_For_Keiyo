@@ -5,7 +5,7 @@ import torch.nn as nn
 
 from ...ops.iou3d_nms import iou3d_nms_utils
 from .. import backbones_2d, backbones_3d, dense_heads, roi_heads
-from ..backbones_2d import map_to_bev
+from ..backbones_2d import map_to_bev, img_backbones
 from ..backbones_3d import pfe, vfe
 from ..model_utils import model_nms_utils
 
@@ -20,8 +20,8 @@ class Detector3DTemplate(nn.Module):
         self.register_buffer('global_step', torch.LongTensor(1).zero_())
 
         self.module_topology = [
-            'vfe', 'backbone_3d', 'map_to_bev_module', 'pfe',
-            'backbone_2d', 'dense_head',  'point_head', 'roi_head'
+            'vfe', 'backbone_3d', 'map_to_bev_module', 'img_backbones', 'pfe',
+            'backbone_2d', 'dense_head', 'point_head', 'roi_head'
         ]
 
     @property
@@ -47,6 +47,17 @@ class Detector3DTemplate(nn.Module):
             )
             self.add_module(module_name, module)
         return model_info_dict['module_list']
+
+    def build_img_backbones(self, model_info_dict):
+        if self.model_cfg.get('IMG_BACKBONES', None) is None:
+            return None, model_info_dict
+
+        img_backbones_module = img_backbones.__all__[self.model_cfg.IMG_BACKBONES.NAME](
+            model_cfg=self.model_cfg.IMG_BACKBONES,
+        )
+        model_info_dict['module_list'].append(img_backbones_module)
+        # model_info_dict['num_bev_features'] = backbone_2d_module.num_bev_features
+        return img_backbones_module, model_info_dict
 
     def build_vfe(self, model_info_dict):
         if self.model_cfg.get('VFE', None) is None:
